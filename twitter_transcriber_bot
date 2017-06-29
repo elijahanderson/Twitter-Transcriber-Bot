@@ -1,0 +1,132 @@
+# Twitter Transcriber Bot
+#
+# This reddit bot will detect comments with a link to a Twitter post, then reply with a transcription of what the tweet
+# said
+#
+# By Eli Anderson
+
+# TODO - add code to prevent bot from responding to itself,
+# TODO - add code to extract JUST the twitter link itself, nothing before or after
+
+# praw is a tool that makes interacting with reddit much easier.
+#
+
+import praw
+
+# The tweepy module with help deal with twitter's API
+
+import tweepy
+
+# time module is used so the bot won't go crazy
+
+import time
+import os
+
+
+# Login the bot into reddit
+
+
+def authenticate_reddit() :
+    print('Authenticating reddit account...')
+    reddit = praw.Reddit('TwitBot', user_agent='twitter_transcriber_bot_test v0.1')
+    print('Authenticated as ' + str(reddit.user.me()))
+    return reddit
+
+# Authenticate twitter account
+
+def authenticate_twitter() :
+    print('Authenticating twitter account...')
+
+    consumer_key = 'icRe9PnxhbXzAfeWxBhjNFdTN'
+    consumer_secret = 'wHULrdZE0ELoHMs0ySmwT41OHe0d2TlHemibcVi8GCuoPpF4Lu'
+    access_token = '701887784303198208-NvPpwavnDqoylOijP8XYOFFXrpYD2Kk'
+    access_token_secret = 'BCkL7jhWH1e0y4weUEKNQd0CIWT4px1xp54sz5juWW6qV'
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+
+    twitter = tweepy.API(auth)
+
+    print('Authenticated as xbilboxswaggins')
+
+    return twitter
+
+
+def run_bot(reddit, twitter, comments_replied_to3) :
+
+    # Loop through the top 100 comments in all recent posts on a certain subreddit
+
+    for comment in reddit.subreddit('test').comments(limit=100) :
+
+        # Find comments with a twitter link
+
+        if 'twitter.com' in comment.body and comment.id not in comments_replied_to3:
+
+            print('String with twitter link found!!')
+
+            # Fetch username of author of the comment to be replied to
+            reddit_username = comment.author.name
+
+            # Put full twitter link into a string
+            #
+            # Get index of where link begins
+            link_index = comment.body.index('https://twitter.com')
+
+            link = comment.body[link_index : len(comment.body)]
+
+            # Follow the twitter link, extract its text into a string
+
+            # reply via comment
+
+            comment.reply(link)
+
+            print('Replied to ' + comment.id)
+
+            # Add comment ID to replied to list
+            comments_replied_to3.append(comment.id)
+
+            # Save comment ID to comments_replied_to3.txt (the 'a' means I am appending to the file)
+
+            with open('comments_replied_to3.txt', 'a') as file:
+                file.write(comment.id + '\n')
+
+    # Sleep for ten seconds
+
+    print('Sleeping for 10 seconds...')
+    time.sleep(10)
+
+# Save the comments that have been replied to in the past so the bot doesn't reply to same comments the after each time
+# it is run
+#
+# Uses .txt file to store the comment IDs
+
+
+def get_saved_comments() :
+
+    # If .txt file with comment IDs doesnt exist, create one and return a blank array
+
+    if not os.path.isfile('comments_replied_to3.txt') :
+        comments_replied_to3 = []
+
+    else :
+        with open('comments_replied_to3.txt', 'r') as file :
+
+            # Read contents of the file
+            comments_replied_to3 = file.read()
+
+            # split() by new line
+            comments_replied_to3 = comments_replied_to3.split('\n')
+
+    return comments_replied_to3
+
+reddit = authenticate_reddit()
+twitter = authenticate_twitter()
+
+# To prevent spam, create list of comments already replied to
+
+comments_replied_to3 = get_saved_comments()
+print(comments_replied_to3)
+
+# To automatically reply to comments, a while loop is used
+
+while True :
+    run_bot(reddit, twitter, comments_replied_to3)
