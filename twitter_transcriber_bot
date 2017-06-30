@@ -5,9 +5,6 @@
 #
 # By Eli Anderson
 
-# TODO - add code to prevent bot from responding to itself,
-# TODO - add code to extract JUST the twitter link itself, nothing before or after
-
 # praw is a tool that makes interacting with reddit much easier.
 #
 
@@ -72,6 +69,7 @@ def run_bot(reddit, twitter, comments_replied_to3) :
             link_index = comment.body.index('https://twitter.com')
             comment_split = comment.body.split(' ')
             length = 0
+
             print(comment_split)
 
             # Get length of url
@@ -80,27 +78,37 @@ def run_bot(reddit, twitter, comments_replied_to3) :
                 if 'https://twitter.com' in comment_split[i] :
                     length = len(comment_split[i])
 
-            # Put url into a string (for some reason, it was getting cut off 3 chars before
-            #                        it should have. Adding 3 fixed it)
-            tweet_url = comment.body[link_index : length+3]
+            # Put url into a string
+            tweet_url = comment.body[link_index : link_index+length]
 
             # Get username & status ID of the tweet
+            #
+            # Split by the slashes so we can specify username or id
             url_split = tweet_url.split('/')
-            print(url_split)
 
+            # All tweet urls are formatted the same way, so username/id are always at the same index
             username = url_split[3]
-
             tweet_id = url_split[5]
+            user_id = twitter.get_user(username)
 
             print('Username: ' + username)
             print('Tweet ID: ' + tweet_id)
 
+            # Get user's screen name
+            screen_name = user_id.name
+            print('Screen name: ' + screen_name)
+
+            # Get the Status object of the tweet
             status = twitter.get_status(int(tweet_id))
-            print(str(status.text))
+
+            # Get the text of the status
+            print('Tweet text: ' + str(status.text))
 
             # reply via comment
 
-            comment.reply(str(status.text))
+            comment.reply('It seems you have linked to a tweet. Let\'s see what they have to say... \n\n' +
+                          '> ' + str(status.text) + '\n\n> -- ' + screen_name + ' (@' + username + ')' +
+                          '\n\n\n ^(I am a bot. If you don\'t like me, send me a PM and I\'ll kick the bucket if I get enough!)')
 
             print('Replied to ' + comment.id)
 
