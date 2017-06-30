@@ -59,7 +59,7 @@ def run_bot(reddit, twitter, comments_replied_to3) :
 
         # Find comments with a twitter link
 
-        if 'twitter.com' in comment.body and comment.id not in comments_replied_to3:
+        if 'twitter.com' in comment.body and comment.id not in comments_replied_to3 and comment.author != reddit.user.me():
 
             print('String with twitter link found!!')
 
@@ -70,14 +70,37 @@ def run_bot(reddit, twitter, comments_replied_to3) :
             #
             # Get index of where link begins
             link_index = comment.body.index('https://twitter.com')
+            comment_split = comment.body.split(' ')
+            length = 0
+            print(comment_split)
 
-            link = comment.body[link_index : len(comment.body)]
+            # Get length of url
+            for i in range(len(comment_split)) :
 
-            # Follow the twitter link, extract its text into a string
+                if 'https://twitter.com' in comment_split[i] :
+                    length = len(comment_split[i])
+
+            # Put url into a string (for some reason, it was getting cut off 3 chars before
+            #                        it should have. Adding 3 fixed it)
+            tweet_url = comment.body[link_index : length+3]
+
+            # Get username & status ID of the tweet
+            url_split = tweet_url.split('/')
+            print(url_split)
+
+            username = url_split[3]
+
+            tweet_id = url_split[5]
+
+            print('Username: ' + username)
+            print('Tweet ID: ' + tweet_id)
+
+            status = twitter.get_status(int(tweet_id))
+            print(str(status.text))
 
             # reply via comment
 
-            comment.reply(link)
+            comment.reply(str(status.text))
 
             print('Replied to ' + comment.id)
 
