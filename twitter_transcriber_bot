@@ -31,6 +31,7 @@ def authenticate_reddit() :
 
 # Authenticate twitter account
 
+
 def authenticate_twitter() :
     print('Authenticating twitter account...')
 
@@ -60,17 +61,12 @@ def run_bot(reddit, twitter, comments_replied_to3) :
 
             print('String with twitter link found!!')
 
-            # Fetch username of author of the comment to be replied to
-            reddit_username = comment.author.name
-
             # Put full twitter link into a string
             #
             # Get index of where link begins
             link_index = comment.body.index('https://twitter.com')
             comment_split = comment.body.split(' ')
             length = 0
-
-            print(comment_split)
 
             # Get length of url
             for i in range(len(comment_split)) :
@@ -148,6 +144,8 @@ def get_saved_comments() :
             comments_replied_to3 = comments_replied_to3.split('\n')
 
     return comments_replied_to3
+
+# Authenticate both accounts
 
 reddit = authenticate_reddit()
 twitter = authenticate_twitter()
